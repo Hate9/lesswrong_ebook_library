@@ -77,7 +77,7 @@ def extract_details_from_sequence_link(link):
         print(f"Error in retrieving Sequence {link}: {e}")
 
     try:
-        author = driver.find_element(By.CSS_SELECTOR, "a.UsersNameDisplay-userName").text
+        author = driver.find_element(By.CSS_SELECTOR, "a.UsersNameDisplay-noColor").text
     except Exception as e:
         print(f"Error in retrieving author from Sequence {link}: {e}")
         author = "Unknown"
@@ -162,7 +162,7 @@ def add_chapter(book, post_link):
         driver.quit()
 
 
-def finalize_book(book, title, toc):
+def finalize_book(book, title, toc, subdirectory):
     book.toc = toc
     book.spine = ["nav"] + toc
 
@@ -181,12 +181,12 @@ def finalize_book(book, title, toc):
 
     book.add_item(nav_css)
 
-    epub.write_epub(f'output/{title_to_filename(title)}.epub', book)
+    epub.write_epub(f'output/{subdirectory}/{title_to_filename(title)}.epub', book)
     clear_tmp_dir()
     return book
 
 
-def build_book(sequence_link):
+def build_book(sequence_link, subdirectory):
     title, author, cover_image_path, post_links = extract_details_from_sequence_link(sequence_link)
     if title_to_filename(title) + '.epub' not in os.listdir('output'):
         book = initialize_book(title, author, cover_image_path)
@@ -197,17 +197,23 @@ def build_book(sequence_link):
                 toc.append(chapter)
             except Exception as e:
                 print(f"Exception in {post_link}: {e}")
-        finalize_book(book, title, toc)
+        finalize_book(book, title, toc, subdirectory)
 
 
 def build_all_books():
-    html_files = ['html_files/library.html', 'html_files/eliezer.html', 'html_files/scott.html', 'html_files/codex.html']
-    sequence_links = get_unique_sequence_links(html_files)
-    for sequence_link in sequence_links:
-        try:
-            build_book(sequence_link)
-        except Exception as e:
-            print(f"Exception in Sequence {sequence_link}: {e}")
+    html_files = {
+        'library': 'html_files/library.html',
+        'eliezer': 'html_files/eliezer.html',
+        'scott': 'html_files/scott.html',
+        'codex': 'html_files/codex.html'
+    }
+    for key, value in html_files.items():
+        sequence_links = get_unique_sequence_links(value)
+        for sequence_link in sequence_links:
+            try:
+                build_book(sequence_link, key)
+            except Exception as e:
+                print(f"Exception in Sequence {sequence_link}: {e}")
 
 
 def build_best_of_month_book(month, year):
@@ -257,36 +263,42 @@ def build_best_of_month_book(month, year):
 
 
 def build_best_of_month_books():
-    for year in range(2012, 2024):
+    for year in range(2012, 2025):
         for month in range(1, 13):
             build_best_of_month_book(month, year)
 
 
 def build_readme():
-    html_files = ['html_files/library.html', 'html_files/eliezer.html', 'html_files/scott.html', 'html_files/codex.html']
-    sequence_links = get_unique_sequence_links(html_files)
-    all_titles_and_authors = []
-    for sequence_link in sequence_links:
-        try:
-            title, author, cover_image_path, post_links = extract_details_from_sequence_link(sequence_link)
-            print(title, author)
-            all_titles_and_authors.append((title, author))
-        except Exception as e:
-            print(f"Exception in {sequence_link}: {e}")
-    sorted_by_title = sorted(all_titles_and_authors, key=lambda x: x[0])
-    with open('README.md', 'w') as f:
-        f.write('## Sequences\n')
-        for title, author in sorted_by_title:
-            f.write(f'* [{title}](output/{title_to_filename(title)}.epub) by {author}\n')
+    html_files = {
+        'library': 'html_files/library.html',
+        'eliezer': 'html_files/eliezer.html',
+        'scott': 'html_files/scott.html',
+        'codex': 'html_files/codex.html'
+    }
+    with open('README.md', 'w') as readme_file:
+        for subdirectory, filename in html_files.items():
+            sequence_links = get_unique_sequence_links(filename)
+            all_titles_and_authors = []
+            for sequence_link in sequence_links:
+                try:
+                    title, author, cover_image_path, post_links = extract_details_from_sequence_link(sequence_link)
+                    print(title, author)
+                    all_titles_and_authors.append((title, author))
+                except Exception as e:
+                    print(f"Exception in {sequence_link}: {e}")
+            sorted_by_title = sorted(all_titles_and_authors, key=lambda x: x[0])
+            readme_file.write(f'## {subdirectory.title()}\n')
+            for title, author in sorted_by_title:
+                readme_file.write(f'* [{title}](output/{subdirectory}/{title_to_filename(title)}.epub) by {author}\n')
 
-        f.write('## Best of LessWrong\n')
-        for year in range(2023, 2011, -1):
-            for month in range(12, 0, -1):
-                file_name = title_to_filename(f'Best of LessWrong: {calendar.month_name[month]} {year}') + '.epub'
-                f.write(f'* [Best of LessWrong: {calendar.month_name[month]} {year}](output/{file_name}) by LessWrong\n')
+            readme_file.write('## Best of LessWrong\n')
+            for year in range(2023, 2011, -1):
+                for month in range(12, 0, -1):
+                    file_name = title_to_filename(f'Best of LessWrong: {calendar.month_name[month]} {year}') + '.epub'
+                    readme_file.write(f'* [Best of LessWrong: {calendar.month_name[month]} {year}](output/{file_name})\n')
 
 
 if __name__ == '__main__':
     build_all_books()
     build_best_of_month_books()
-    # build_readme()
+    build_readme()
