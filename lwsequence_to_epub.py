@@ -8,6 +8,7 @@ from ebooklib import epub
 import uuid
 import os, shutil
 import calendar
+import datetime
 
 
 def clear_tmp_dir():
@@ -25,12 +26,11 @@ def extract_sequence_links(html):
     return [link["href"] for link in links if '/s/' in link["href"] and '/p/' not in link["href"]]
 
 
-def get_unique_sequence_links(files):
+def get_unique_sequence_links(file):
     sequence_links = []
-    for file in files:
-        with open(file, 'r') as html_file:
-            html = html_file.read()
-            sequence_links += extract_sequence_links(html)
+    with open(file, 'r') as html_file:
+        html = html_file.read()
+        sequence_links += extract_sequence_links(html)
     return list(set(sequence_links))
 
 
@@ -208,9 +208,11 @@ def build_all_books():
         'codex': 'html_files/codex.html'
     }
     for key, value in html_files.items():
+        os.makedirs(f'output/{key}', exist_ok=True)
         sequence_links = get_unique_sequence_links(value)
         for sequence_link in sequence_links:
             try:
+                print(f"Building book for {sequence_link}")
                 build_book(sequence_link, key)
             except Exception as e:
                 print(f"Exception in Sequence {sequence_link}: {e}")
@@ -233,6 +235,7 @@ def build_best_of_month_book(month, year):
     author = 'LessWrong'
     cover_image_path = 'lw_cover.svg'
 
+    os.makedirs('output/bestof', exist_ok=True)
     # Get the right link
     link = f'https://www.lesswrong.com/allPosts?filter=frontpage&after={start_date}&before={end_date}&timeframe=allTime'
     if title_to_filename(title) + '.epub' not in os.listdir('output'):
@@ -252,7 +255,7 @@ def build_best_of_month_book(month, year):
             for post_link in post_links:
                 book, chapter = add_chapter(book, post_link)
                 toc.append(chapter)
-            finalize_book(book, title, toc)
+            finalize_book(book, title, toc, 'bestof')
         except Exception as e:
             if 'title' in locals():
                 print(f"Exception in {title}: {e}")
@@ -263,8 +266,9 @@ def build_best_of_month_book(month, year):
 
 
 def build_best_of_month_books():
-    for year in range(2012, 2025):
+    for year in range(2012, datetime.datetime.now().year):
         for month in range(1, 13):
+            print(f"Building best-of-month book for {month}/{year}")
             build_best_of_month_book(month, year)
 
 
@@ -292,10 +296,10 @@ def build_readme():
                 readme_file.write(f'* [{title}](output/{subdirectory}/{title_to_filename(title)}.epub) by {author}\n')
 
             readme_file.write('## Best of LessWrong\n')
-            for year in range(2023, 2011, -1):
+            for year in range(datetime.datetime.now().year, 2011, -1):
                 for month in range(12, 0, -1):
                     file_name = title_to_filename(f'Best of LessWrong: {calendar.month_name[month]} {year}') + '.epub'
-                    readme_file.write(f'* [Best of LessWrong: {calendar.month_name[month]} {year}](output/{file_name})\n')
+                    readme_file.write(f'* [Best of LessWrong: {calendar.month_name[month]} {year}](output/bestof/{file_name})\n')
 
 
 if __name__ == '__main__':
