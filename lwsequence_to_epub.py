@@ -188,7 +188,7 @@ def finalize_book(book, title, toc, subdirectory):
 
 def build_book(sequence_link, subdirectory):
     title, author, cover_image_path, post_links = extract_details_from_sequence_link(sequence_link)
-    if title_to_filename(title) + '.epub' not in os.listdir('output'):
+    if title_to_filename(title) + '.epub' not in os.listdir(f"output/{subdirectory}"):
         book = initialize_book(title, author, cover_image_path)
         toc = []
         for post_link in post_links:
@@ -238,7 +238,7 @@ def build_best_of_month_book(month, year):
     os.makedirs('output/bestof', exist_ok=True)
     # Get the right link
     link = f'https://www.lesswrong.com/allPosts?filter=frontpage&after={start_date}&before={end_date}&timeframe=allTime'
-    if title_to_filename(title) + '.epub' not in os.listdir('output'):
+    if title_to_filename(title) + '.epub' not in os.listdir('output/bestof'):
         try:
             # Navigate to the website
             driver.get(link)
