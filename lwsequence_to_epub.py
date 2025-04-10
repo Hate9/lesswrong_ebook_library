@@ -294,6 +294,9 @@ def build_readme():
         'codex': 'html_files/codex.html'
     }
     with open('README.md', 'w') as readme_file:
+        readme_file.write("# LessWrong Ebook Library\n")
+        readme_file.write("The LessWrong Community Sequences are now available in an easily accessible EPUB format, providing an alternative way to read the content offline on e-readers. The ebooks preserve the original visual content, including images and math, while offering a comfortable reading experience with features like adjustable font sizes and glare-free screens. The [source code](lwsequence_to_epub.py) for the scraping and generation of the ebooks, written in Python, is also available for those interested in generating their own copies.\n\n")
+        readme_file.write(f'[lesswrong-library.zip](../../releases/download/{datetime.datetime.now().strftime("%y-%m-%d")}/lesswrong-library.zip)\n')
         for subdirectory, filename in html_files.items():
             sequence_links = get_unique_sequence_links(filename)
             all_titles_and_authors = []
@@ -306,14 +309,16 @@ def build_readme():
                     print(f"Exception in {sequence_link}: {e}")
             sorted_by_title = sorted(all_titles_and_authors, key=lambda x: x[0])
             readme_file.write(f'## {subdirectory.title()}\n')
+            readme_file.write(f'[{subdirectory}.zip](../../releases/download/{datetime.datetime.now().strftime("%y-%m-%d")}/{subdirectory}.zip)\n')
             for title, author in sorted_by_title:
-                readme_file.write(f'* [{title}](output/{subdirectory}/{title_to_filename(title)}.epub) by {author}\n')
+                readme_file.write(f'* [{title}](../../releases/download/{datetime.datetime.now().strftime("%y-%m-%d")}/{title_to_filename(title)}.epub) by {author}\n')
 
-            readme_file.write('## Best of LessWrong\n')
-            for year in range(datetime.datetime.now().year, 2011, -1):
-                for month in range(12, 0, -1):
-                    file_name = title_to_filename(f'Best of LessWrong: {calendar.month_name[month]} {year}') + '.epub'
-                    readme_file.write(f'* [Best of LessWrong: {calendar.month_name[month]} {year}](output/bestof/{file_name})\n')
+        readme_file.write('## Best of LessWrong\n')
+        readme_file.write(f'[bestof.zip](../../releases/download/{datetime.datetime.now().strftime("%y-%m-%d")}/bestof.zip)\n')
+        for year in range(datetime.datetime.now().year, 2011, -1):
+            for month in range(12, 0, -1):
+                file_name = title_to_filename(f'Best of LessWrong: {calendar.month_name[month]} {year}') + '.epub'
+                readme_file.write(f'* [Best of LessWrong: {calendar.month_name[month]} {year}](../../releases/download/{datetime.datetime.now().strftime("%y-%m-%d")}/{file_name})\n')
 
 
 if __name__ == '__main__':
