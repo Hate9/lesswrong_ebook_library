@@ -188,6 +188,9 @@ def finalize_book(book, title, toc, subdirectory):
 
 def build_book(sequence_link, subdirectory):
     title, author, cover_image_path, post_links = extract_details_from_sequence_link(sequence_link)
+    if title_to_filename(title) + '.epub' in os.listdir('output'):
+        os.rename(f"output/{title_to_filename(title) + '.epub'}", f"output/{subdirectory}/{title_to_filename(title) + '.epub'}")
+        print("Moved pre-existing book to subfolder.")
     if title_to_filename(title) + '.epub' not in os.listdir(f"output/{subdirectory}"):
         book = initialize_book(title, author, cover_image_path)
         toc = []
@@ -198,13 +201,17 @@ def build_book(sequence_link, subdirectory):
             except Exception as e:
                 print(f"Exception in {post_link}: {e}")
         finalize_book(book, title, toc, subdirectory)
+    else:
+        print("Skipped building pre-existing book.")
 
 
 def build_all_books():
     html_files = {
-        'library': 'html_files/library.html',
-        'eliezer': 'html_files/eliezer.html',
+        'rationality': 'html_files/rationality.html',
+        'highlights': 'html_files/highlights.html',
         'scott': 'html_files/scott.html',
+        'eliezer': 'html_files/eliezer.html',
+        'library': 'html_files/library.html',
         'codex': 'html_files/codex.html'
     }
     for key, value in html_files.items():
@@ -238,6 +245,9 @@ def build_best_of_month_book(month, year):
     os.makedirs('output/bestof', exist_ok=True)
     # Get the right link
     link = f'https://www.lesswrong.com/allPosts?filter=frontpage&after={start_date}&before={end_date}&timeframe=allTime'
+    if title_to_filename(title) + '.epub' in os.listdir('output'):
+        os.rename(f"output/{title_to_filename(title) + '.epub'}", f"output/bestof/{title_to_filename(title) + '.epub'}")
+        print("Moved pre-existing book to subfolder.")
     if title_to_filename(title) + '.epub' not in os.listdir('output/bestof'):
         try:
             # Navigate to the website
@@ -263,6 +273,8 @@ def build_best_of_month_book(month, year):
                 print(f"Exception {e}")
         finally:
             driver.quit()
+    else:
+        print("Skipped building pre-existing book.")
 
 
 def build_best_of_month_books():
@@ -274,9 +286,11 @@ def build_best_of_month_books():
 
 def build_readme():
     html_files = {
-        'library': 'html_files/library.html',
-        'eliezer': 'html_files/eliezer.html',
+        'rationality': 'html_files/rationality.html',
+        'highlights': 'html_files/highlights.html',
         'scott': 'html_files/scott.html',
+        'eliezer': 'html_files/eliezer.html',
+        'library': 'html_files/library.html',
         'codex': 'html_files/codex.html'
     }
     with open('README.md', 'w') as readme_file:
